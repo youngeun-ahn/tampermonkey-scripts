@@ -12,8 +12,6 @@
 (() => {
     'use strict'
 
-    console.log('test')
-
     // Data
     const [, broadName, broadNo] = location.href.split('/')
     const broadNickname = $('.nickname').eq(0).attr('title')
