@@ -65,6 +65,46 @@
     return max
   }
 
+  // 최신 이모티콘 원본 목록 렌더링 갱신
+  function blinkRecentEmoticons () {
+    btnEmoticon.click()
+    document.querySelector('.ic_clock').click() // 최근 탭
+    btnEmoticon.click()
+  }
+
+  // 최근 사용한 이모티콘 목록 갱신
+  function updateRecentEmoticons () {
+    blinkRecentEmoticons()
+
+    setTimeout(() => {
+      // 최근에 사용한 이모티콘 5개까지 클론
+      const emoticons = Array
+        .from(document.querySelectorAll('.scroll_area.recent_emoticon.recent_emoticon_default > span > a'))
+        .slice(0, 5)
+        .map(_ => $(_).clone(true, true).on('click', () => _.click()))
+  
+      boxEmoticon.empty()
+      boxEmoticon.append(emoticons)
+    }, 500)
+  }
+
+  // 최근 사용한 이모티콘 목록 UI 초기화
+  function initRecentEmoticons () {
+    // 처음에 광고 등으로 이모티콘 사용 불가능할 때 인터벌
+    const interval = setInterval(() => {
+      const disabled = btnEmoticon.parent().hasClass('off')
+      if (disabled) return
+  
+      // 잠시 최근 이모티콘 목록 열어서 1회 렌더링 하도록 처리
+      btnEmoticon.click()
+      document.querySelector('.ic_clock').click() // 최근 탭
+      btnEmoticon.click()
+
+      updateRecentEmoticons()  
+      clearInterval(interval)
+    }, 1000)
+  }
+
   // 복사/잘라내기/붙여넣기 우회 구현(콘은 복사 불가)
   function onKeyDownChatInput (e) {
     const selection = window.getSelection()
@@ -93,6 +133,11 @@
           range.insertNode(node)
           range.collapse()
         })
+    }
+
+    // 채팅 보낼 때마다 최근 이모티콘 목록 갱신
+    if (!e.shiftKey && e.key === 'Enter') {
+      updateRecentEmoticons()
     }
   }
 
@@ -158,40 +203,6 @@
         btnAddSkip.click()
         clearInterval(interval)
       }
-    }, 1000)
-  }
-
-  // 최근 사용한 이모티콘 목록
-  function initRecentEmoticons () {
-    function updateRecentEmoticons () {
-      // 최근에 사용한 이모티콘 5개까지 클론
-      const emoticons = Array
-        .from(document.querySelectorAll('.scroll_area.recent_emoticon.recent_emoticon_default > span > a'))
-        .slice(0, 5)
-        .map(_ => $(_).clone(true, true).on('click', () => _.click()))
-  
-      boxEmoticon.empty()
-      boxEmoticon.append(emoticons)
-    }
-  
-    // 처음에 광고 등으로 이모티콘 사용 불가능할 때 인터벌
-    const interval = setInterval(() => {
-      const disabled = btnEmoticon.parent().hasClass('off')
-      if (disabled) return
-  
-      // 잠시 최근 이모티콘 목록 열어서 1회 렌더링 하도록 처리
-      btnEmoticon.click()
-      document.querySelector('.ic_clock').click() // 최근 탭
-      btnEmoticon.click()
-
-      setTimeout(() => {
-        updateRecentEmoticons()
-  
-        // 이모티콘 팝업 열고 닫을 때마다 갱신
-        btnEmoticon.on('click', () => updateRecentEmoticons())
-      }, 500)
-  
-      clearInterval(interval)
     }, 1000)
   }
 
