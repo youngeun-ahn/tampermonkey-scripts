@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Afreeca Chat UI Extension
 // @namespace    http://tampermonkey.net/
-// @version      2024-03-17
-// @description  아프리카 채팅 UI 개선 확장(보유 별풍선 표시, 채팅 복붙 해금(이모티콘X), 채팅 높이 조정
-// @author       힝잉잉잉잉잉
+// @version      2024-03-27
+// @description  아프리카 채팅 UI 개선 확장(보유 별풍선 표시, 채팅 복붙 해금(이모티콘X), 채팅 높이 조정, 화면 아래 버튼들 Collapse UI 추가)
+// @author       [바둑]힝잉잉
 // @match        https://play.afreecatv.com/*/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=afreecatv.com
 // @grant        none
@@ -77,11 +77,26 @@
     blinkRecentEmoticons()
 
     setTimeout(() => {
-      // 최근에 사용한 이모티콘 5개까지 클론
-      const emoticons = Array
+      // 최근에 사용한 이모티콘 7개까지 클론
+      const getEmoticons = () => Array
         .from(document.querySelectorAll('.scroll_area.recent_emoticon.recent_emoticon_default > span > a'))
-        .slice(0, 5)
-        .map(_ => $(_).clone(true, true).on('click', () => _.click()))
+        .slice(0, 7)
+
+      const emoticons = getEmoticons()
+        .map((_, i) => $(_)
+          .clone(true, true)
+          .on('click', () => {
+            if ($('#emoticonArea').hasClass('on')) {
+              document.querySelector('.ic_clock').click()
+              getEmoticons()[i].click()
+            } else {
+              btnEmoticon.click()
+              document.querySelector('.ic_clock').click()
+              getEmoticons()[i].click()
+              btnEmoticon.click()
+            }
+          })
+        )
   
       boxEmoticon.empty()
       boxEmoticon.append(emoticons)
@@ -98,11 +113,11 @@
       // 잠시 최근 이모티콘 목록 열어서 1회 렌더링 하도록 처리
       btnEmoticon.click()
       document.querySelector('.ic_clock').click() // 최근 탭
-      btnEmoticon.click()
-
+      
       updateRecentEmoticons()  
+      btnEmoticon.click()
       clearInterval(interval)
-    }, 1000)
+    }, 3000)
   }
 
   // 복사/잘라내기/붙여넣기 우회 구현(콘은 복사 불가)
@@ -206,8 +221,44 @@
     }, 1000)
   }
 
+  // 스크린모드를 위해 
+  function setSlideAction () {
+    const boxPlayerActions = $('.player_item_list > ul').eq(0)
+    boxPlayerActions.css({
+      transition: 'transform 500ms ease',
+    })
+
+    let isSlide = true
+    const btnSlidePlayerActions = $('<li>◀</li>')
+    btnSlidePlayerActions.css({
+      width: '2rem',
+      fontSize: '1.6rem',
+      mixBlendMode: 'difference',
+      cursor: 'pointer',
+      transition: 'transform 500ms ease',
+    })
+
+    btnSlidePlayerActions.on('click', () => {
+      isSlide = !isSlide
+
+      btnSlidePlayerActions
+        .css('transform', isSlide ? 'rotate(180deg)' : 'rotate(0deg)')
+        .attr('title', isSlide ? '버튼 숨기기' : '버튼 보이기')
+      boxPlayerActions
+        .css('transform', isSlide ? 'translateX(0)' : 'translateX(calc(100% - 1.2rem))')
+    })
+
+    setTimeout(() => {
+      boxPlayerActions.prepend(btnSlidePlayerActions)
+      btnSlidePlayerActions.click()
+    }, 5000)
+
+    $('.btn_smode').on('click', () => isSlide && btnSlidePlayerActions.click())
+  }
+
   initUI()
   watchUserIdInterval()
   initRecentEmoticons()
   setAutoAddSkipInterval()
+  setSlideAction()
 })()
